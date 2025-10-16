@@ -10,8 +10,11 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Ambil URL frontend dari environment variable.
-// Ini SANGAT PENTING untuk redirect setelah login.
 const FRONTEND_URL = process.env.FRONTEND_URL;
+
+// **INI BARIS YANG HILANG DAN SUDAH GW KEMBALIKAN**
+// Tempat untuk menyimpan token user sementara
+let userTokens = {};
 
 // Middleware
 app.use(cors());
@@ -21,55 +24,49 @@ app.use(bodyParser.json());
 app.get('/api/auth/callback', async (req, res) => {
   const { code } = req.query;
 
-  // Jika tidak ada FRONTEND_URL, aplikasi tidak bisa berjalan dengan benar.
   if (!FRONTEND_URL) {
     return res.status(500).send('Konfigurasi error: FRONTEND_URL tidak di-set di server.');
   }
 
   if (!code) {
-    // Jika gagal, redirect ke halaman frontend dengan status error
     return res.redirect(`${FRONTEND_URL}/?auth=failed&error=nocode`);
   }
 
   try {
     const tokens = await getTokenFromCode(code);
     const sessionId = Math.random().toString(36).substring(7);
-    // Simpan token user (di dunia nyata, gunakan database atau session store)
-    userTokens[sessionId] = tokens;
+    userTokens[sessionId] = tokens; // Sekarang baris ini tidak akan error lagi
 
-    // INI KUNCINYA: Redirect kembali ke Vercel dengan session ID
     res.redirect(`${FRONTEND_URL}/?session=${sessionId}&auth=success`);
 
   } catch (error) {
     console.error('Error handling OAuth callback:', error);
-    // Jika ada error lain, redirect ke halaman frontend dengan status error
     res.redirect(`${FRONTEND_URL}/?auth=failed&error=token`);
   }
 });
 
-// Endpoint untuk mendapatkan URL login Google
+// ... (sisa kode lainnya tidak berubah dan sudah benar) ...
+
 app.get('/api/auth/google', (req, res) => {
-  try {
-    const authUrl = getAuthUrl();
-    res.json({ success: true, authUrl: authUrl });
-  } catch (error) {
-    res.status(500).json({ success: false, error: 'Gagal membuat URL autentikasi' });
-  }
+    try {
+        const authUrl = getAuthUrl();
+        res.json({ success: true, authUrl: authUrl });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Gagal membuat URL autentikasi' });
+    }
 });
 
-// ... (sisa endpoint lainnya seperti /api/parse-jadwal, /api/create-events, dll. tetap sama) ...
-
 app.post('/api/parse-jadwal', (req, res) => {
-  try {
-    const { rawText } = req.body;
-    if (!rawText) return res.status(400).json({ success: false, error: 'Raw text kosong' });
-    const courses = parseJadwal(rawText);
-    const validCourses = courses.filter(validateCourse);
-    if (validCourses.length === 0) return res.status(400).json({ success: false, error: 'Tidak ada jadwal valid' });
-    res.json({ success: true, data: validCourses, total: validCourses.length });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
+    try {
+        const { rawText } = req.body;
+        if (!rawText) return res.status(400).json({ success: false, error: 'Raw text kosong' });
+        const courses = parseJadwal(rawText);
+        const validCourses = courses.filter(validateCourse);
+        if (validCourses.length === 0) return res.status(400).json({ success: false, error: 'Tidak ada jadwal valid' });
+        res.json({ success: true, data: validCourses, total: validCourses.length });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
 });
 
 app.post('/api/create-events', async (req, res) => {
@@ -91,8 +88,6 @@ app.get('/api/auth/status', (req, res) => {
     res.json({ authenticated: (sessionId && userTokens[sessionId]) });
 });
 
-
-// Start server
 app.listen(PORT, () => {
   console.log(`✅ SyncJadwal server running on http://localhost:${PORT}`);
 });
