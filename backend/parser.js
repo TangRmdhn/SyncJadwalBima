@@ -14,7 +14,6 @@ function parseJadwal(rawText) {
     const line1 = cleanLines[i];
     const line2 = cleanLines[i + 1];
     const line3 = cleanLines[i + 2];
-    // line4 (cleanLines[i + 3]) sekarang diabaikan
 
     try {
       const courseInfo = parseLine1(line1);
