@@ -19,7 +19,7 @@ function getOAuth2Client() {
   return new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
 }
 
-// Fungsi untuk mendapatkan URL autentikasi (YANG SEBELUMNYA HILANG)
+// Fungsi untuk mendapatkan URL autentikasi
 function getAuthUrl() {
   const oAuth2Client = getOAuth2Client();
   const SCOPES = ['https://www.googleapis.com/auth/calendar'];
@@ -29,21 +29,21 @@ function getAuthUrl() {
   });
 }
 
-// Fungsi untuk mendapatkan token dari kode (YANG SEBELUMNYA HILANG)
+// Fungsi untuk mendapatkan token dari kode
 async function getTokenFromCode(code) {
   const oAuth2Client = getOAuth2Client();
   const { tokens } = await oAuth2Client.getToken(code);
   return tokens;
 }
 
-// Fungsi untuk membuat authenticated client (YANG SEBELUMNYA HILANG)
+// Fungsi untuk membuat authenticated client
 function getAuthenticatedClient(tokens) {
   const oAuth2Client = getOAuth2Client();
   oAuth2Client.setCredentials(tokens);
   return oAuth2Client;
 }
 
-// Fungsi untuk membuat satu event di kalender (YANG SEBELUMNYA HILANG)
+// Fungsi untuk membuat satu event di kalender
 async function createCalendarEvent(auth, courseData, startDate, weeksCount) {
   const calendar = google.calendar({ version: 'v3', auth });
   
@@ -51,24 +51,35 @@ async function createCalendarEvent(auth, courseData, startDate, weeksCount) {
   const targetDay = hariMap[courseData.hari];
   const startDateObj = new Date(startDate);
   
-  const currentDay = startDateObj.getDay();
+  // Cari tanggal pertama yang sesuai dengan hari yang dijadwalkan
+  const currentDay = startDateObj.getUTCDay(); // Gunakan getUTCDay untuk konsistensi
   const daysUntilTarget = (targetDay - currentDay + 7) % 7;
-  startDateObj.setDate(startDateObj.getDate() + daysUntilTarget);
-  
-  const startDateTime = new Date(startDateObj);
-  const [startHour, startMinute] = courseData.jam_mulai.split(':');
-  startDateTime.setHours(parseInt(startHour), parseInt(startMinute), 0);
-  
-  const endDateTime = new Date(startDateObj);
-  const [endHour, endMinute] = courseData.jam_selesai.split(':');
-  endDateTime.setHours(parseInt(endHour), parseInt(endMinute), 0);
-  
+  startDateObj.setUTCDate(startDateObj.getUTCDate() + daysUntilTarget); // Gunakan setUTCDate
+
+  // ** INI BAGIAN YANG DIPERBAIKI **
+  // Buat string tanggal dalam format YYYY-MM-DD
+  const year = startDateObj.getUTCFullYear();
+  const month = String(startDateObj.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(startDateObj.getUTCDate()).padStart(2, '0');
+  const dateString = `${year}-${month}-${day}`;
+
+  // Gabungkan dengan waktu dari input untuk membuat string ISO 8601 lengkap
+  // String ini secara eksplisit memberitahu bahwa waktu ini adalah untuk Asia/Jakarta
+  const startDateTimeString = `${dateString}T${courseData.jam_mulai}:00`;
+  const endDateTimeString = `${dateString}T${courseData.jam_selesai}:00`;
+
   const event = {
     summary: `${courseData.nama_matkul} (${courseData.kelas})`,
     location: courseData.lokasi || '',
     description: `Dosen: ${courseData.dosen}\nKode: ${courseData.kode_matkul}\nSKS: ${courseData.sks}`,
-    start: { dateTime: startDateTime.toISOString(), timeZone: 'Asia/Jakarta' },
-    end: { dateTime: endDateTime.toISOString(), timeZone: 'Asia/Jakarta' },
+    start: {
+      dateTime: startDateTimeString, // Langsung gunakan string yang sudah benar
+      timeZone: 'Asia/Jakarta',
+    },
+    end: {
+      dateTime: endDateTimeString, // Langsung gunakan string yang sudah benar
+      timeZone: 'Asia/Jakarta',
+    },
     recurrence: [
       `RRULE:FREQ=WEEKLY;COUNT=${weeksCount}`
     ],
@@ -80,7 +91,7 @@ async function createCalendarEvent(auth, courseData, startDate, weeksCount) {
   return response.data;
 }
 
-// Fungsi untuk membuat banyak event sekaligus (YANG SEBELUMNYA HILANG)
+// Fungsi untuk membuat banyak event sekaligus
 async function createMultipleEvents(auth, coursesData, startDate, weeksCount) {
   const results = [];
   const errors = [];
@@ -97,7 +108,7 @@ async function createMultipleEvents(auth, coursesData, startDate, weeksCount) {
   return { results, errors };
 }
 
-// Bagian export yang sekarang sudah benar karena semua fungsinya ada
+// Bagian export
 module.exports = {
   getAuthUrl,
   getTokenFromCode,
