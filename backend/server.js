@@ -20,6 +20,11 @@ app.use(express.static('frontend'));
 
 let userTokens = {};
 
+// **BAGIAN BARU**: Definisikan URL frontend di sini
+// Ambil dari environment variable, atau gunakan URL Vercel lu sebagai default
+const FRONTEND_URL = process.env.FRONTEND_URL || "https://sync-jadwal-bima.vercel.app";
+
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'SyncJadwal API is running' });
 });
@@ -57,15 +62,19 @@ app.get('/api/auth/callback', async (req, res) => {
     const tokens = await getTokenFromCode(code);
     const sessionId = Math.random().toString(36).substring(7);
     userTokens[sessionId] = tokens;
-    res.redirect(`/?session=${sessionId}&auth=success`);
+
+    // **BAGIAN YANG DIUBAH**: Redirect ke frontend Vercel, bukan ke root backend
+    res.redirect(`${FRONTEND_URL}/?session=${sessionId}&auth=success`);
+
   } catch (error) {
-    res.redirect('/?auth=failed');
+    // Jika gagal, redirect juga ke frontend dengan status gagal
+    res.redirect(`${FRONTEND_URL}/?auth=failed`);
   }
 });
 
 app.post('/api/create-events', async (req, res) => {
   try {
-    const { sessionId, courses, startDate, weeksCount } = req.body; // <-- Terima weeksCount
+    const { sessionId, courses, startDate, weeksCount } = req.body;
     
     if (!sessionId || !courses || !startDate || !weeksCount) {
       return res.status(400).json({ success: false, error: 'Data tidak lengkap (session, courses, startDate, weeksCount)' });
@@ -82,7 +91,7 @@ app.post('/api/create-events', async (req, res) => {
       auth,
       courses,
       startDate,
-      weeksCount // <-- Kirim ke service
+      weeksCount
     );
     
     res.json({ success: true, created: results.length, failed: errors.length, results: results, errors: errors });
