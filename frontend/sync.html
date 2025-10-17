@@ -15,9 +15,22 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: var(--font-family); background-color: var(--c-bg); color: var(--c-text-primary); }
         .container { max-width: 800px; margin: 0 auto; padding: 40px 24px; }
-        .app-header { text-align: center; margin-bottom: 40px; }
+        .app-header { text-align: center; margin-bottom: 40px; position: relative; }
         .app-header h1 { font-size: 2.5rem; font-weight: 700; }
-        .app-header p { color: var(--c-text-secondary); }
+        .app-header p { color: var(--c-text-secondary); margin-top: 8px; }
+        
+        /* TOMBOL KEMBALI (BARU) */
+        .back-link {
+            display: inline-block;
+            margin-top: 24px;
+            color: var(--c-primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
         .step { background-color: var(--c-surface); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--c-border); padding: 32px; margin-bottom: 32px; }
         .step-title { font-size: 1.25rem; font-weight: 600; margin-bottom: 24px; }
         .button { width: 100%; padding: 14px; font-size: 1rem; font-weight: 600; color: white; background-color: var(--c-primary); border: none; border-radius: 8px; cursor: pointer; transition: background-color 0.2s; margin-top: 16px; }
@@ -38,8 +51,9 @@
 <body>
     <div class="container">
         <header class="app-header">
-            <h1>Mulai dalam 3 Langkah Mudah</h1>
-            <p>Ikuti langkah di bawah ini untuk menyinkronkan jadwalmu.</p>
+            <h1>Aplikasi SyncJadwal</h1>
+            <p>Ikuti 3 langkah di bawah ini untuk menyinkronkan jadwalmu.</p>
+            <a href="/" class="back-link">&larr; Kembali ke Halaman Utama & Instruksi</a>
         </header>
 
         <main>
@@ -68,7 +82,7 @@
     </div>
 
     <script>
-        // SEMUA LOGIKA JAVASCRIPT APLIKASI ADA DI SINI
+        // KODE JAVASCRIPT LENGKAP (TIDAK BERUBAH DARI SEBELUMNYA)
         const API_BASE = 'https://syncjadwalbima-production.up.railway.app/api';
         let sessionId = null;
         let parsedCourses = [];
@@ -107,19 +121,23 @@
             setDefaultStartDate();
         });
 
-        btnConnectGoogle.onclick = async () => { /* ... (kode tidak berubah) ... */ };
-        btnParseSchedule.onclick = async () => { /* ... (kode tidak berubah) ... */ };
-        btnSyncToCalendar.onclick = async () => { /* ... (kode tidak berubah) ... */ };
+        btnConnectGoogle.onclick = async () => {
+            try { showLoading(true); const r = await fetch(`${API_BASE}/auth/google`), d = await r.json(); if(d.success) window.location.href = d.authUrl; else showStatus('Gagal membuat URL autentikasi', 'error'); } catch (e) { showStatus('Terjadi kesalahan', 'error'); } finally { showLoading(false); }
+        };
+        btnParseSchedule.onclick = async () => {
+            const rawText = scheduleInput.value.trim(); if(!rawText) return showStatus('Mohon masukkan jadwal', 'error');
+            try { showLoading(true); resultContainer.classList.add('hidden'); const r = await fetch(`${API_BASE}/parse-jadwal`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({rawText}) }), d = await r.json(); if(d.success) { parsedCourses = d.data; displayParsedCourses(d.data); stepStartDate.classList.remove('hidden'); showStatus(`Berhasil proses ${d.total} matkul`, 'success'); } else { showStatus(d.error, 'error'); } } catch (e) { showStatus('Terjadi kesalahan', 'error'); } finally { showLoading(false); }
+        };
+        btnSyncToCalendar.onclick = async () => {
+            if(!sessionId) return showStatus('Hubungkan Google dulu', 'error'); if(parsedCourses.length === 0) return showStatus('Tidak ada jadwal', 'error'); const startDate = startDateInput.value, weeksCount = weeksCountInput.value; if(!startDate || !weeksCount) return showStatus('Isi tanggal dan minggu', 'error');
+            try { showLoading(true); const r = await fetch(`${API_BASE}/create-events`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({sessionId, courses: parsedCourses, startDate, weeksCount: parseInt(weeksCount)}) }), d = await r.json(); if(d.success) { displaySyncResults(d); showStatus(`Berhasil buat ${d.created} event`, 'success'); } else { if(r.status === 401){ sessionId = null; localStorage.removeItem('syncjadwal_session'); updateAuthStatus(false); showStatus('Sesi berakhir, hubungkan ulang', 'error'); } else { showStatus(d.error, 'error'); } } } catch (e) { showStatus('Terjadi kesalahan sinkronisasi', 'error'); } finally { showLoading(false); }
+        };
         
-        // Implementasi lengkap (untuk copy-paste)
-        btnConnectGoogle.onclick = async () => { try { showLoading(true); const r = await fetch(`${API_BASE}/auth/google`), d = await r.json(); if(d.success) window.location.href = d.authUrl; else showStatus('Gagal membuat URL autentikasi', 'error'); } catch (e) { showStatus('Terjadi kesalahan', 'error'); } finally { showLoading(false); } };
-        btnParseSchedule.onclick = async () => { const rawText = scheduleInput.value.trim(); if(!rawText) return showStatus('Mohon masukkan jadwal', 'error'); try { showLoading(true); resultContainer.classList.add('hidden'); const r = await fetch(`${API_BASE}/parse-jadwal`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({rawText}) }), d = await r.json(); if(d.success) { parsedCourses = d.data; displayParsedCourses(d.data); stepStartDate.classList.remove('hidden'); showStatus(`Berhasil proses ${d.total} matkul`, 'success'); } else { showStatus(d.error, 'error'); } } catch (e) { showStatus('Terjadi kesalahan', 'error'); } finally { showLoading(false); } };
-        btnSyncToCalendar.onclick = async () => { if(!sessionId) return showStatus('Hubungkan Google dulu', 'error'); if(parsedCourses.length === 0) return showStatus('Tidak ada jadwal', 'error'); const startDate = startDateInput.value, weeksCount = weeksCountInput.value; if(!startDate || !weeksCount) return showStatus('Isi tanggal dan minggu', 'error'); try { showLoading(true); const r = await fetch(`${API_BASE}/create-events`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({sessionId, courses: parsedCourses, startDate, weeksCount: parseInt(weeksCount)}) }), d = await r.json(); if(d.success) { displaySyncResults(d); showStatus(`Berhasil buat ${d.created} event`, 'success'); } else { if(r.status === 401){ sessionId = null; localStorage.removeItem('syncjadwal_session'); updateAuthStatus(false); showStatus('Sesi berakhir, hubungkan ulang', 'error'); } else { showStatus(d.error, 'error'); } } } catch (e) { showStatus('Terjadi kesalahan sinkronisasi', 'error'); } finally { showLoading(false); } };
-        function displayParsedCourses(courses) { resultContainer.innerHTML = `<div class="step"><div class="step-title">📚 Jadwal Diproses (${courses.length})</div> ${courses.map(c => `<div class="course-item">${c.nama_matkul} (${c.kelas})</div>`).join('')}</div>`; resultContainer.classList.remove('hidden'); }
+        function displayParsedCourses(courses) { resultContainer.innerHTML = `<div class="step"><div class="step-title">📚 Jadwal Diproses (${courses.length})</div> ${courses.map(c => `<div class="course-item" style="padding: 8px; border-bottom: 1px solid #eee;">${c.nama_matkul} (${c.kelas})</div>`).join('')}</div>`; resultContainer.classList.remove('hidden'); }
         function displaySyncResults(data) { resultContainer.innerHTML = `<div class="step"><div class="step-title">✅ Hasil Sinkronisasi</div><p><strong>Berhasil:</strong> ${data.created} event<br><strong>Gagal:</strong> ${data.failed} event</p></div>`; resultContainer.classList.remove('hidden'); }
         async function checkAuthStatus() { try { const r = await fetch(`${API_BASE}/auth/status?sessionId=${sessionId}`), d = await r.json(); updateAuthStatus(d.authenticated); if(!d.authenticated){ sessionId = null; localStorage.removeItem('syncjadwal_session'); } } catch (e) {} }
         function updateAuthStatus(isConnected) { authStatus.textContent = isConnected ? '✅ Terhubung' : '❌ Belum Terhubung'; authStatus.className = `auth-status ${isConnected ? 'auth-connected' : 'auth-disconnected'}`; btnConnectGoogle.textContent = isConnected ? 'Hubungkan Ulang Akun' : 'Hubungkan dengan Google Calendar'; }
-        function showLoading(show) { loadingIndicator.classList.toggle('hidden', !show); resultContainer.classList.toggle('hidden', show); btnParseSchedule.disabled = show; btnSyncToCalendar.disabled = show; btnConnectGoogle.disabled = show; }
+        function showLoading(show) { loadingIndicator.classList.toggle('hidden', !show); if(show) resultContainer.classList.add('hidden'); btnParseSchedule.disabled = show; btnSyncToCalendar.disabled = show; btnConnectGoogle.disabled = show; }
         function showStatus(message, type) { statusMessage.textContent = message; statusMessage.className = `auth-status ${type === 'success' ? 'auth-connected' : 'auth-disconnected'}`; statusMessage.classList.remove('hidden'); setTimeout(() => statusMessage.classList.add('hidden'), 5000); }
         function setDefaultStartDate() { const d = new Date(), offset = (d.getDay() + 6) % 7; d.setDate(d.getDate() - offset + 7); startDateInput.value = d.toISOString().split('T')[0]; }
     </script>
