@@ -9,11 +9,10 @@ const { parseJadwal, validateCourse } = require('./parser');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Ambil URL frontend dari environment variable.
+// Ambil URL frontend dari environment variable. Ini WAJIB di-set di Railway.
 const FRONTEND_URL = process.env.FRONTEND_URL;
 
-// **INI BARIS YANG HILANG DAN SUDAH GW KEMBALIKAN**
-// Tempat untuk menyimpan token user sementara
+// Tempat sementara untuk menyimpan token user
 let userTokens = {};
 
 // Middleware
@@ -25,7 +24,7 @@ app.get('/api/auth/callback', async (req, res) => {
   const { code } = req.query;
 
   if (!FRONTEND_URL) {
-    return res.status(500).send('Konfigurasi error: FRONTEND_URL tidak di-set di server.');
+    return res.status(500).send('Konfigurasi server error: FRONTEND_URL tidak di-set.');
   }
 
   if (!code) {
@@ -35,27 +34,25 @@ app.get('/api/auth/callback', async (req, res) => {
   try {
     const tokens = await getTokenFromCode(code);
     const sessionId = Math.random().toString(36).substring(7);
-    userTokens[sessionId] = tokens; // Sekarang baris ini tidak akan error lagi
-
+    userTokens[sessionId] = tokens;
     res.redirect(`${FRONTEND_URL}/?session=${sessionId}&auth=success`);
-
   } catch (error) {
     console.error('Error handling OAuth callback:', error);
     res.redirect(`${FRONTEND_URL}/?auth=failed&error=token`);
   }
 });
 
-// ... (sisa kode lainnya tidak berubah dan sudah benar) ...
-
+// Endpoint untuk mendapatkan URL login Google
 app.get('/api/auth/google', (req, res) => {
-    try {
-        const authUrl = getAuthUrl();
-        res.json({ success: true, authUrl: authUrl });
-    } catch (error) {
-        res.status(500).json({ success: false, error: 'Gagal membuat URL autentikasi' });
-    }
+  try {
+    const authUrl = getAuthUrl();
+    res.json({ success: true, authUrl: authUrl });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Gagal membuat URL autentikasi' });
+  }
 });
 
+// Endpoint untuk memproses jadwal
 app.post('/api/parse-jadwal', (req, res) => {
     try {
         const { rawText } = req.body;
@@ -69,6 +66,7 @@ app.post('/api/parse-jadwal', (req, res) => {
     }
 });
 
+// Endpoint untuk membuat event
 app.post('/api/create-events', async (req, res) => {
     try {
         const { sessionId, courses, startDate, weeksCount } = req.body;
@@ -83,11 +81,12 @@ app.post('/api/create-events', async (req, res) => {
     }
 });
 
+// Endpoint untuk cek status login
 app.get('/api/auth/status', (req, res) => {
     const { sessionId } = req.query;
     res.json({ authenticated: (sessionId && userTokens[sessionId]) });
 });
 
 app.listen(PORT, () => {
-  console.log(`✅ SyncJadwal server running on http://localhost:${PORT}`);
+  console.log(`✅ SyncJadwal server running on port ${PORT}`);
 });
