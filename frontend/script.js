@@ -25,7 +25,7 @@ themeToggle.addEventListener('click', () => {
 });
 
 // === APPLICATION SCRIPT ===
-const API_BASE = 'https://syncjadwalbima-production.up.railway.app/api';
+const API_BASE = '/api';
 let sessionId = null;
 let parsedCourses = [];
 

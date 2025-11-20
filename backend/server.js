@@ -44,4 +44,11 @@ app.get('/api/auth/google', (req, res) => { /* ... */ });
 app.post('/api/parse-jadwal', (req, res) => { /* ... */ });
 app.post('/api/create-events', async (req, res) => { /* ... */ });
 app.get('/api/auth/status', (req, res) => { /* ... */ });
-app.listen(PORT, () => { console.log(`✅ SyncJadwal server running on port ${PORT}`); });
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`✅ SyncJadwal server running on port ${PORT}`);
+    });
+}
+
+// PENTING: Export app biar Vercel bisa baca
+module.exports = app;
