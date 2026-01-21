@@ -20,12 +20,13 @@ function getOAuth2Client() {
 }
 
 // Fungsi untuk mendapatkan URL autentikasi
-function getAuthUrl() {
+function getAuthUrl(state) {
   const oAuth2Client = getOAuth2Client();
   const SCOPES = ['https://www.googleapis.com/auth/calendar'];
   return oAuth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: SCOPES,
+    state: state,
   });
 }
 

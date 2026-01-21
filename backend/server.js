@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
+const crypto = require('crypto');
 require('dotenv').config();
 
 const { getAuthUrl, getTokenFromCode, getAuthenticatedClient, createMultipleEvents } = require('./calendarService');
@@ -14,12 +16,16 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 let userTokens = {};
 
 app.use(cors());
+app.use(cookieParser());
 app.use(bodyParser.json());
 
 // 1. Endpoint Auth Google
 app.get('/api/auth/google', (req, res) => {
   try {
-    const authUrl = getAuthUrl();
+    const state = crypto.randomBytes(16).toString('hex');
+    res.cookie('oauth_state', state, { httpOnly: true, maxAge: 15 * 60 * 1000 }); // 15 menit
+    
+    const authUrl = getAuthUrl(state);
     res.json({ success: true, authUrl });
   } catch (error) {
     console.error('Error generating auth url:', error);
@@ -29,11 +35,21 @@ app.get('/api/auth/google', (req, res) => {
 
 // 2. Callback dari Google
 app.get('/api/auth/callback', async (req, res) => {
-  const { code } = req.query;
+  const { code, state } = req.query;
+  const storedState = req.cookies.oauth_state;
 
   if (!code) {
     return res.redirect(`${FRONTEND_URL}/sync.html?auth=failed&error=nocode`);
   }
+
+  // Validasi State untuk mencegah CSRF
+  if (!state || !storedState || state !== storedState) {
+    console.error('Security Warning: State mismatch or missing.');
+    return res.redirect(`${FRONTEND_URL}/sync.html?auth=failed&error=security_risk`);
+  }
+
+  // Valid, hapus cookie state
+  res.clearCookie('oauth_state');
 
   try {
     const tokens = await getTokenFromCode(code);
