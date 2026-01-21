@@ -7,6 +7,7 @@ require('dotenv').config();
 
 const { getAuthUrl, getTokenFromCode, getAuthenticatedClient, createMultipleEvents } = require('./calendarService');
 const { parseJadwal, validateCourse } = require('./parser');
+const { generateIcs } = require('./icsService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -122,6 +123,28 @@ app.post('/api/create-events', async (req, res) => {
         return res.status(401).json({ success: false, error: 'Izin akses dicabut atau kadaluarsa.' });
     }
     res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 6. Generate ICS File
+app.post('/api/generate-ics', async (req, res) => {
+  const { courses, startDate, weeksCount } = req.body;
+
+  if (!courses || !startDate || !weeksCount) {
+    return res.status(400).json({ success: false, error: 'Data tidak lengkap.' });
+  }
+
+  try {
+    const icsContent = await generateIcs(courses, startDate, weeksCount);
+    
+    // Set headers agar browser mendownload sebagai file
+    res.setHeader('Content-Type', 'text/calendar');
+    res.setHeader('Content-Disposition', 'attachment; filename=jadwal-kuliah.ics');
+    
+    res.send(icsContent);
+  } catch (error) {
+    console.error('Error generating ICS:', error);
+    res.status(500).json({ success: false, error: 'Gagal membuat file ICS.' });
   }
 });
 
