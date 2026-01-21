@@ -1,121 +1,409 @@
-/* frontend/script.js */
-// === THEME TOGGLE SCRIPT ===
-const themeToggle = document.getElementById('theme-toggle');
-const sunIcon = document.getElementById('theme-icon-sun');
-const moonIcon = document.getElementById('theme-icon-moon');
-const userTheme = localStorage.getItem('theme');
-
-// Apply saved theme on load
-if (userTheme === 'dark') {
-    document.body.classList.add('dark-mode');
-    sunIcon.classList.add('hidden');
-    moonIcon.classList.remove('hidden');
-}
-
-themeToggle.addEventListener('click', () => {
-    document.body.classList.toggle('dark-mode');
-    sunIcon.classList.toggle('hidden');
-    moonIcon.classList.toggle('hidden');
-    
-    if (document.body.classList.contains('dark-mode')) {
-        localStorage.setItem('theme', 'dark');
-    } else {
-        localStorage.setItem('theme', 'light');
-    }
-});
-
-// === APPLICATION SCRIPT ===
+/* frontend/script.js - Redesigned for new UI */
 const API_BASE = '/api';
 let sessionId = null;
 let parsedCourses = [];
 
-const btnConnectGoogle = document.getElementById('btnConnectGoogle');
-const btnParseSchedule = document.getElementById('btnParseSchedule');
-const btnSyncToCalendar = document.getElementById('btnSyncToCalendar');
-const btnDownloadIcs = document.getElementById('btnDownloadIcs');
+// === DOM ELEMENTS ===
 const scheduleInput = document.getElementById('scheduleInput');
+const btnParseSchedule = document.getElementById('btnParseSchedule');
+const sectionPreview = document.getElementById('sectionPreview');
+const sectionActions = document.getElementById('sectionActions');
+const previewContainer = document.getElementById('previewContainer');
+const previewDesc = document.getElementById('previewDesc');
+
+// Configuration & Actions
 const startDateInput = document.getElementById('startDate');
 const weeksCountInput = document.getElementById('weeksCount');
-const authStatus = document.getElementById('authStatus');
-const stepStartDate = document.getElementById('stepStartDate');
+const btnConnectGoogle = document.getElementById('btnConnectGoogle');
+const authBadge = document.getElementById('authBadge');
+const btnSyncToCalendar = document.getElementById('btnSyncToCalendar');
+const btnDownloadIcs = document.getElementById('btnDownloadIcs');
+const btnShowTutorial = document.getElementById('btnShowTutorial');
+
+// Loading & Status
 const loadingIndicator = document.getElementById('loadingIndicator');
-const resultContainer = document.getElementById('resultContainer');
 const statusMessage = document.getElementById('statusMessage');
 
+// Modal
+const tutorialModal = document.getElementById('tutorialModal');
+const btnCloseModals = document.querySelectorAll('.btn-close-modal');
+
+// === INITIALIZATION ===
 window.addEventListener('DOMContentLoaded', () => {
+    // Check for auth callback
     const urlParams = new URLSearchParams(window.location.search);
     const session = urlParams.get('session');
     const authResult = urlParams.get('auth');
+    
     if (session && authResult === 'success') {
         sessionId = session;
         localStorage.setItem('syncjadwal_session', session);
-        updateAuthStatus(true);
-        showStatus('Berhasil terhubung dengan Google Calendar!', 'success');
-        window.history.replaceState({}, document.title, '/');
-    } else if (authResult === 'failed') {
-        showStatus('Gagal terhubung dengan Google. Silakan coba lagi.', 'error');
-        window.history.replaceState({}, document.title, '/');
+        updateAuthUI(true);
+        window.history.replaceState({}, document.title, window.location.pathname);
+    } else {
+        const savedSession = localStorage.getItem('syncjadwal_session');
+        if (savedSession) {
+            sessionId = savedSession;
+            checkAuthStatus();
+        }
     }
-    const savedSession = localStorage.getItem('syncjadwal_session');
-    if (savedSession) {
-        sessionId = savedSession;
-        checkAuthStatus();
-    }
-    setDefaultStartDate();
+
+    setDefaultDate(startDateInput);
+    initializeCalendar(); // Initialize calendar grid
+    toggleSection3(false); // Initially disable section 3
 });
 
-btnConnectGoogle.onclick = async () => {
-    try { showLoading(true); const r = await fetch(`${API_BASE}/auth/google`), d = await r.json(); if(d.success) window.location.href = d.authUrl; else showStatus('Gagal membuat URL autentikasi', 'error'); } catch (e) { showStatus('Terjadi kesalahan', 'error'); } finally { showLoading(false); }
-};
+function toggleSection3(enable) {
+    if (enable) {
+        sectionActions.classList.remove('disabled-section');
+        startDateInput.disabled = false;
+        weeksCountInput.disabled = false;
+        btnConnectGoogle.disabled = false;
+        btnSyncToCalendar.disabled = false;
+        btnDownloadIcs.disabled = false;
+    } else {
+        sectionActions.classList.add('disabled-section');
+        startDateInput.disabled = true;
+        weeksCountInput.disabled = true;
+        btnConnectGoogle.disabled = true;
+        btnSyncToCalendar.disabled = true;
+        btnDownloadIcs.disabled = true;
+    }
+}
+
+function setDefaultDate(input) {
+    const today = new Date().toISOString().split('T')[0];
+    input.value = today;
+}
+
+// Initialize empty calendar grid
+function initializeCalendar() {
+    const startHour = 7;
+    const endHour = 18;
+    const pxPerHour = 60;
+    
+    // Build time column
+    const timeColumn = document.getElementById('timeColumn');
+    let timeColHtml = '';
+    for (let h = startHour; h <= endHour; h++) {
+        timeColHtml += `<div class="time-slot-label">${h.toString().padStart(2, '0')}:00</div>`;
+    }
+    timeColumn.innerHTML = timeColHtml;
+    
+    // Build grid lines for each day
+    const dayIds = ['dayMonday', 'dayTuesday', 'dayWednesday', 'dayThursday', 'dayFriday', 'daySaturday'];
+    dayIds.forEach(dayId => {
+        const dayColumn = document.getElementById(dayId);
+        let gridLines = '';
+        for (let h = startHour; h <= endHour; h++) {
+            gridLines += '<div class="day-hour-line"></div>';
+        }
+        dayColumn.innerHTML = gridLines;
+    });
+}
+
+// === EVENT HANDLERS ===
+
+// 1. PARSE SCHEDULE
 btnParseSchedule.onclick = async () => {
-    const rawText = scheduleInput.value.trim(); if(!rawText) return showStatus('Mohon masukkan jadwal', 'error');
-    try { showLoading(true); resultContainer.classList.add('hidden'); const r = await fetch(`${API_BASE}/parse-jadwal`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({rawText}) }), d = await r.json(); if(d.success) { parsedCourses = d.data; displayParsedCourses(d.data); stepStartDate.classList.remove('hidden'); showStatus(`Berhasil proses ${d.total} matkul`, 'success'); } else { showStatus(d.error, 'error'); } } catch (e) { showStatus('Terjadi kesalahan', 'error'); } finally { showLoading(false); }
-};
-btnSyncToCalendar.onclick = async () => {
-    if(!sessionId) return showStatus('Hubungkan Google dulu', 'error'); if(parsedCourses.length === 0) return showStatus('Tidak ada jadwal', 'error'); const startDate = startDateInput.value, weeksCount = weeksCountInput.value; if(!startDate || !weeksCount) return showStatus('Isi tanggal dan minggu', 'error');
-    try { showLoading(true); const r = await fetch(`${API_BASE}/create-events`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({sessionId, courses: parsedCourses, startDate, weeksCount: parseInt(weeksCount)}) }), d = await r.json(); if(d.success) { displaySyncResults(d); showStatus(`Berhasil buat ${d.created} event`, 'success'); } else { if(r.status === 401){ sessionId = null; localStorage.removeItem('syncjadwal_session'); updateAuthStatus(false); showStatus('Sesi berakhir, hubungkan ulang', 'error'); } else { showStatus(d.error, 'error'); } } } catch (e) { showStatus('Terjadi kesalahan sinkronisasi', 'error'); } finally { showLoading(false); }
+    const rawText = scheduleInput.value.trim();
+    if (!rawText) {
+        alert('Silakan paste jadwal BIMA terlebih dahulu!');
+        return;
+    }
+
+    await withLoading(async () => {
+        const response = await fetch(`${API_BASE}/parse-jadwal`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rawText })
+        });
+        const data = await response.json();
+        
+        if (!data.success) {
+            alert(data.error || 'Gagal memparse jadwal');
+            return;
+        }
+
+        parsedCourses = data.data;
+        displayParsedCourses(parsedCourses);
+        
+        // Show preview and enable actions sections
+        sectionPreview.classList.remove('hidden');
+        toggleSection3(true);
+        
+        // Update preview description
+        previewDesc.textContent = `${parsedCourses.length} mata kuliah berhasil diparse`;
+        
+        // Scroll to preview smoothly
+        sectionPreview.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
 };
 
-btnDownloadIcs.onclick = async () => {
-    if(parsedCourses.length === 0) return showStatus('Tidak ada jadwal', 'error');
+// 2. CONNECT GOOGLE
+btnConnectGoogle.onclick = async () => {
+    await withLoading(async () => {
+        const response = await fetch(`${API_BASE}/auth/google`);
+        const data = await response.json();
+        
+        if (data.success) {
+            window.location.href = data.authUrl;
+        } else {
+            alert('Gagal mendapatkan URL autentikasi');
+        }
+    });
+};
+
+// 3. SYNC TO GOOGLE CALENDAR
+btnSyncToCalendar.onclick = async () => {
+    if (!sessionId) {
+        alert('Harap hubungkan akun Google Calendar terlebih dahulu!');
+        return;
+    }
+    
+    if (parsedCourses.length === 0) {
+        alert('Belum ada jadwal yang diparse. Silakan parse jadwal terlebih dahulu.');
+        return;
+    }
+
     const startDate = startDateInput.value;
-    const weeksCount = weeksCountInput.value;
+    const weeks = parseInt(weeksCountInput.value);
+
+    if (!startDate) {
+        alert('Harap isi tanggal mulai semester!');
+        return;
+    }
+
+    await withLoading(async () => {
+        const response = await fetch(`${API_BASE}/create-events`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                sessionId, 
+                courses: parsedCourses, 
+                startDate, 
+                weeksCount: weeks 
+            })
+        });
+        
+        if (response.status === 401) {
+            handleLogout();
+            alert('Sesi habis, silakan login ulang.');
+            return;
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccessMessage(`✅ Berhasil! ${data.created} event telah ditambahkan ke Google Calendar.`);
+        } else {
+            alert(data.error || 'Gagal sync ke Google Calendar');
+        }
+    });
+};
+
+// 4. DOWNLOAD ICS FILE
+btnDownloadIcs.onclick = async () => {
+    if (parsedCourses.length === 0) {
+        alert('Belum ada jadwal yang diparse. Silakan parse jadwal terlebih dahulu.');
+        return;
+    }
     
-    if(!startDate || !weeksCount) return showStatus('Isi tanggal dan minggu', 'error');
-    
-    try {
-        showLoading(true);
+    const startDate = startDateInput.value;
+    const weeks = parseInt(weeksCountInput.value);
+
+    if (!startDate) {
+        alert('Harap isi tanggal mulai semester!');
+        return;
+    }
+
+    await withLoading(async () => {
         const response = await fetch(`${API_BASE}/generate-ics`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ courses: parsedCourses, startDate, weeksCount: parseInt(weeksCount) })
+            body: JSON.stringify({ 
+                courses: parsedCourses, 
+                startDate, 
+                weeksCount: weeks 
+            })
         });
-        
+
         if (response.ok) {
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'jadwal-kuliah.ics';
+            a.download = 'jadwal_kuliah.ics';
             document.body.appendChild(a);
             a.click();
-            window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
-            showStatus('File ICS berhasil didownload!', 'success');
+            window.URL.revokeObjectURL(url);
+            
+            // Show tutorial modal
+            tutorialModal.classList.remove('hidden');
         } else {
-            const d = await response.json();
-            showStatus(d.error || 'Gagal download ICS', 'error');
+            const data = await response.json();
+            alert(data.error || 'Gagal membuat file ICS');
         }
-    } catch (e) {
-        showStatus('Terjadi kesalahan download', 'error');
-    } finally {
-        showLoading(false);
-    }
+    });
 };
-function displayParsedCourses(courses) { resultContainer.innerHTML = `<div class="step"><div class="result-title">📚 Jadwal Diproses (${courses.length})</div> ${courses.map(c => `<div class="course-item"><div class="course-name">${c.nama_matkul} (${c.kelas})</div> <div class="course-details">📅 ${c.hari}, ${c.jam_mulai}-${c.jam_selesai} | 📍 ${c.lokasi} | 👨‍🏫 ${c.dosen}</div></div>`).join('')}</div>`; resultContainer.classList.remove('hidden'); }
-function displaySyncResults(data) { resultContainer.innerHTML = `<div class="step"><div class="result-title">✅ Hasil Sinkronisasi</div><p><strong>Berhasil:</strong> ${data.created} event<br><strong>Gagal:</strong> ${data.failed} event</p></div>`; resultContainer.classList.remove('hidden'); }
-async function checkAuthStatus() { try { const r = await fetch(`${API_BASE}/auth/status?sessionId=${sessionId}`), d = await r.json(); updateAuthStatus(d.authenticated); if(!d.authenticated){ sessionId = null; localStorage.removeItem('syncjadwal_session'); } } catch (e) {} }
-function updateAuthStatus(isConnected) { authStatus.textContent = isConnected ? '✅ Terhubung' : '❌ Belum Terhubung'; authStatus.className = `auth-status ${isConnected ? 'auth-connected' : 'auth-disconnected'}`; btnConnectGoogle.textContent = isConnected ? 'Hubungkan Ulang Akun' : 'Hubungkan dengan Google Calendar'; }
-function showLoading(show) { loadingIndicator.classList.toggle('hidden', !show); resultContainer.classList.toggle('hidden', show); btnParseSchedule.disabled = show; btnSyncToCalendar.disabled = show; btnDownloadIcs.disabled = show; btnConnectGoogle.disabled = show; }
-function showStatus(message, type) { statusMessage.textContent = message; statusMessage.className = `auth-status ${type === 'success' ? 'auth-connected' : 'auth-disconnected'}`; statusMessage.classList.remove('hidden'); setTimeout(() => statusMessage.classList.add('hidden'), 5000); }
-function setDefaultStartDate() { const d = new Date(), offset = (d.getDay() + 6) % 7; d.setDate(d.getDate() - offset + 7); startDateInput.value = d.toISOString().split('T')[0]; }
+
+// === HELPER FUNCTIONS ===
+
+async function checkAuthStatus() {
+    try {
+        const response = await fetch(`${API_BASE}/auth/status?sessionId=${sessionId}`);
+        const data = await response.json();
+        updateAuthUI(data.authenticated);
+        
+        if (!data.authenticated) {
+            handleLogout();
+        }
+    } catch (error) {
+        console.error('Auth check failed:', error);
+    }
+}
+
+function updateAuthUI(isConnected) {
+    if (isConnected) {
+        authBadge.textContent = '✅ Terhubung';
+        authBadge.classList.add('connected');
+        btnConnectGoogle.textContent = 'Ganti Akun';
+    } else {
+        authBadge.textContent = 'Belum Terhubung';
+        authBadge.classList.remove('connected');
+        btnConnectGoogle.textContent = 'Hubungkan Google Calendar';
+    }
+}
+
+function handleLogout() {
+    sessionId = null;
+    localStorage.removeItem('syncjadwal_session');
+    updateAuthUI(false);
+}
+
+async function withLoading(fn) {
+    try {
+        loadingIndicator.classList.remove('hidden');
+        await fn();
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Terjadi kesalahan yang tidak terduga.');
+    } finally {
+        loadingIndicator.classList.add('hidden');
+    }
+}
+
+function showSuccessMessage(message) {
+    statusMessage.innerHTML = `
+        <div style="
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #000;
+            color: #fff;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        ">
+            ${message}
+        </div>
+    `;
+    statusMessage.classList.remove('hidden');
+    
+    setTimeout(() => {
+        statusMessage.classList.add('hidden');
+    }, 5000);
+}
+
+function displayParsedCourses(courses) {
+    if (!courses || courses.length === 0) {
+        // Clear any existing events
+        clearCalendarEvents();
+        previewDesc.textContent = 'Jadwal akan muncul setelah parsing';
+        return;
+    }
+
+    // Clear existing events first
+    clearCalendarEvents();
+    
+    const days = {
+        'senin': 'dayMonday',
+        'selasa': 'dayTuesday', 
+        'rabu': 'dayWednesday',
+        'kamis': 'dayThursday',
+        'jumat': 'dayFriday',
+        'sabtu': 'daySaturday'
+    };
+    
+    const startHour = 7;
+    const pxPerHour = 60;
+
+    const getMinutes = (timeStr) => {
+        const [h, m] = timeStr.split(':').map(Number);
+        return h * 60 + m;
+    };
+
+    // Add events to each day column
+    courses.forEach(course => {
+        const dayKey = course.hari.toLowerCase();
+        const dayId = days[dayKey];
+        
+        if (!dayId) return; // Skip if day not found
+        
+        const dayColumn = document.getElementById(dayId);
+        if (!dayColumn) return;
+        
+        const startMin = getMinutes(course.jam_mulai);
+        const endMin = getMinutes(course.jam_selesai);
+        const duration = endMin - startMin;
+        const top = startMin - (startHour * 60);
+
+        const eventCard = document.createElement('div');
+        eventCard.className = 'event-card';
+        eventCard.style.top = `${top}px`;
+        eventCard.style.height = `${duration}px`;
+        eventCard.innerHTML = `
+            <div class="event-title">${course.nama_matkul}</div>
+            <div class="event-meta">${course.jam_mulai} - ${course.jam_selesai}</div>
+            <div class="event-meta">${course.lokasi}</div>
+        `;
+        
+        dayColumn.appendChild(eventCard);
+    });
+    
+    // Update description
+    previewDesc.textContent = `${courses.length} mata kuliah berhasil diparse`;
+}
+
+function clearCalendarEvents() {
+    const dayIds = ['dayMonday', 'dayTuesday', 'dayWednesday', 'dayThursday', 'dayFriday', 'daySaturday'];
+    dayIds.forEach(dayId => {
+        const dayColumn = document.getElementById(dayId);
+        if (!dayColumn) return;
+        
+        // Remove all event cards, keep grid lines
+        const events = dayColumn.querySelectorAll('.event-card');
+        events.forEach(event => event.remove());
+    });
+}
+
+// === MODAL HANDLERS ===
+btnCloseModals.forEach(btn => {
+    btn.addEventListener('click', () => {
+        tutorialModal.classList.add('hidden');
+    });
+});
+
+tutorialModal.addEventListener('click', (e) => {
+    if (e.target === tutorialModal) {
+        tutorialModal.classList.add('hidden');
+    }
+});
+
+btnShowTutorial.onclick = (e) => {
+    e.preventDefault();
+    tutorialModal.classList.remove('hidden');
+};

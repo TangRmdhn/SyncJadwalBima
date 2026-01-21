@@ -49,12 +49,12 @@ function generateIcs(courses, startDate, weeksCount) {
     const events = [];
 
     courses.forEach(course => {
-      const firstDate = getFirstDate(course.day, startDate);
+      const firstDate = getFirstDate(course.hari, startDate);
       if (!firstDate) return;
 
       // Parse time "07:00" -> [7, 0]
-      const [startHour, startMinute] = course.start.split(':').map(Number);
-      const [endHour, endMinute] = course.end.split(':').map(Number);
+      const [startHour, startMinute] = course.jam_mulai.split(':').map(Number);
+      const [endHour, endMinute] = course.jam_selesai.split(':').map(Number);
 
       const year = firstDate.getFullYear();
       const month = firstDate.getMonth() + 1; // ics uses 1-indexed months
@@ -63,9 +63,9 @@ function generateIcs(courses, startDate, weeksCount) {
       const event = {
         start: [year, month, day, startHour, startMinute],
         end: [year, month, day, endHour, endMinute],
-        title: `${course.name} - ${course.class}`,
-        description: `Dosen: ${course.lecturer}\nSKS: ${course.sks}\nKode: ${course.code}`,
-        location: course.room,
+        title: `${course.nama_matkul} - ${course.kelas}`,
+        description: `Dosen: ${course.dosen}\nSKS: ${course.sks}\nKode: ${course.kode_matkul}`,
+        location: course.lokasi,
         recurrenceRule: `FREQ=WEEKLY;COUNT=${weeksCount}`,
         status: 'CONFIRMED',
         busyStatus: 'BUSY'

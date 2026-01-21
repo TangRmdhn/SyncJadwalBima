@@ -1,48 +1,45 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BimCalendar - Sinkronisasi Jadwal Kuliah UPNVY</title>
-    <meta name="google-site-verification" content="h43V0d6sye27ecNhiVMO5qKUhEQOlH2vgE_o7sP1e0s" /> 
-    <style>
-        :root {
-            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            --c-bg: #f8f9fa;
-            --c-text-primary: #212529;
-            --c-text-secondary: #6c757d;
-            --c-primary: #4f46e5;
-            --c-primary-hover: #4338ca;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body { font-family: var(--font-family); background-color: var(--c-bg); color: var(--c-text-primary); }
-        .container { max-width: 800px; margin: 0 auto; padding: 24px; }
-        
-        .hero { text-align: center; padding: 80px 24px; }
-        .hero h1 { font-size: 3rem; font-weight: 800; margin-bottom: 16px; }
-        .hero .highlight { color: var(--c-primary); }
-        .hero p { font-size: 1.25rem; color: var(--c-text-secondary); max-width: 600px; margin: 0 auto 40px auto; }
-        .hero .cta-button { display: inline-block; padding: 16px 36px; font-size: 1.1rem; font-weight: 600; color: white; background-color: var(--c-primary); border-radius: 12px; text-decoration: none; transition: background-color 0.2s; }
-        .hero .cta-button:hover { background-color: var(--c-primary-hover); }
-
-        .footer { text-align: center; padding: 40px 24px; font-size: 0.9rem; color: var(--c-text-secondary); border-top: 1px solid #e5e7eb; margin-top: 60px; }
-        .footer a { color: var(--c-primary); text-decoration: none; }
-        .footer a:hover { text-decoration: underline; }
-    </style>
+    <meta name="google-site-verification" content="h43V0d6sye27ecNhiVMO5qKUhEQOlH2vgE_o7sP1e0s" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-    <div class="container">
-        <header class="hero">
-            <h1><span class="highlight">BimCalendar</span></h1>
-            <p>BimCalendar adalah alat gratis untuk mahasiswa UPN "Veteran" Yogyakarta yang memindahkan jadwal kuliah dari BIMA ke Google Calendar secara otomatis.</p>
-            <a href="sync.html" class="cta-button">Mulai Sinkronisasi</a>
+    <div class="sync-container">
+        <!-- Header -->
+        <header class="sync-header">
+            <div class="logo-section">
+                <h1 class="logo-title">BimCalendar</h1>
+                <p class="logo-subtitle">Sinkronisasi Jadwal Kuliah UPNVY</p>
+            </div>
         </header>
 
-        <footer class="footer">
-            <p>&copy; 2025 BimCalendar. Dibuat untuk memudahkan kita semua.</p>
-            <a href="privacy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+        <!-- Hero Section -->
+        <main class="hero-section">
+            <h1 class="hero-title">Pindahkan Jadwal BIMA ke <span class="highlight">Google Calendar</span></h1>
+            <p class="hero-subtitle">BimCalendar adalah alat gratis untuk mahasiswa UPN "Veteran" Yogyakarta yang
+                memindahkan jadwal kuliah dari portal BIMA ke Google Calendar secara otomatis.</p>
+            <div class="hero-actions">
+                <a href="sync.html" class="btn btn-primary btn-large">Mulai Sinkronisasi</a>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="sync-footer">
+            <p>&copy; 2026 BimCalendar. Dibuat untuk memudahkan kita semua.</p>
+            <div class="footer-links">
+                <a href="privacy.html" class="footer-link">Privacy Policy</a>
+            </div>
         </footer>
     </div>
 </body>
+
 </html>

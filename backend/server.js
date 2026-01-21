@@ -3,6 +3,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const crypto = require('crypto');
+const path = require('path');
 require('dotenv').config();
 
 const { getAuthUrl, getTokenFromCode, getAuthenticatedClient, createMultipleEvents } = require('./calendarService');
@@ -19,6 +20,9 @@ let userTokens = {};
 app.use(cors());
 app.use(cookieParser());
 app.use(bodyParser.json());
+
+// Serve static files from frontend
+app.use(express.static(path.join(__dirname, '../frontend')));
 
 // 1. Endpoint Auth Google
 app.get('/api/auth/google', (req, res) => {

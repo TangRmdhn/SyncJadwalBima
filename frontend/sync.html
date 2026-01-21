@@ -4,220 +4,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mulai Sinkronisasi - BimCalendar</title>
-    <style>
-        :root {
-            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            --radius: 12px;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-            --c-bg: #f8f9fa;
-            --c-surface: #ffffff;
-            --c-text-primary: #212529;
-            --c-text-secondary: #6c757d;
-            --c-border: #dee2e6;
-            --c-primary: #4f46e5;
-            --c-primary-hover: #4338ca;
-            --c-success: #198754;
-            --c-success-bg: #d1e7dd;
-            --c-error: #dc3545;
-            --c-error-bg: #f8d7da;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: var(--font-family);
-            background-color: var(--c-bg);
-            color: var(--c-text-primary);
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 40px 24px;
-        }
-
-        .app-header {
-            text-align: center;
-            margin-bottom: 40px;
-            position: relative;
-        }
-
-        .app-header h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-        }
-
-        .app-header p {
-            color: var(--c-text-secondary);
-            margin-top: 8px;
-        }
-
-        .back-link {
-            display: inline-block;
-            margin-top: 24px;
-            color: var(--c-primary);
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .back-link:hover {
-            text-decoration: underline;
-        }
-
-        .step {
-            background-color: var(--c-surface);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            border: 1px solid var(--c-border);
-            padding: 32px;
-            margin-bottom: 32px;
-        }
-
-        .step-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 24px;
-        }
-
-        .button {
-            width: 100%;
-            padding: 14px;
-            font-size: 1rem;
-            font-weight: 600;
-            color: white;
-            background-color: var(--c-primary);
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            margin-top: 16px;
-        }
-
-        .button:hover {
-            background-color: var(--c-primary-hover);
-        }
-
-        .button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        textarea,
-        input {
-            width: 100%;
-            padding: 12px 16px;
-            background-color: var(--c-bg);
-            border: 1px solid var(--c-border);
-            border-radius: 8px;
-            font-size: 1rem;
-            color: var(--c-text-primary);
-        }
-
-        .input-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            font-size: 0.9rem;
-            color: var(--c-text-secondary);
-        }
-
-        .auth-status {
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-weight: 500;
-            text-align: center;
-        }
-
-        .auth-connected {
-            background-color: var(--c-success-bg);
-            color: var(--c-success);
-            border: 1px solid var(--c-success);
-        }
-
-        .auth-disconnected {
-            background-color: var(--c-error-bg);
-            color: var(--c-error);
-            border: 1px solid var(--c-error);
-        }
-
-        .spinner {
-            margin: 24px auto;
-            width: 40px;
-            height: 40px;
-            border: 4px solid var(--c-border);
-            border-top-color: var(--c-primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .input-group {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <title>Sinkronisasi Jadwal - BimCalendar</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <div class="container">
-        <header class="app-header">
-            <h1>BimCalendar</h1>
-            <p>Ikuti 3 langkah di bawah ini untuk menyinkronkan jadwalmu.</p>
-            <a href="instructions.html" class="back-link">&larr; Lihat Tutorial Penggunaan</a>
+    <div class="sync-container">
+        <!-- Header -->
+        <header class="sync-header">
+            <div class="logo-section">
+                <h1 class="logo-title">BimCalendar</h1>
+                <p class="logo-subtitle">Sinkronisasi Jadwal Kuliah UPNVY</p>
+            </div>
+            <a href="index.html" class="back-link">← Kembali</a>
         </header>
 
-        <main>
-            <section class="step">
-                <div class="step-title">Langkah 1: Hubungkan Akun Google</div>
-                <div id="authStatus" class="auth-status auth-disconnected">❌ Belum Terhubung</div>
-                <button id="btnConnectGoogle" class="button">Hubungkan dengan Google Calendar</button>
-            </section>
-            <section class="step">
-                <div class="step-title">Langkah 2: Copy-Paste Jadwal dari BIMA</div>
-                <textarea id="scheduleInput" rows="8"
-                    placeholder="Paste semua jadwal mentah dari BIMA di sini..."></textarea>
-                <button id="btnParseSchedule" class="button">Proses Jadwal</button>
-            </section>
-            <section class="step hidden" id="stepStartDate">
-                <div class="step-title">Langkah 3: Atur & Sinkronkan</div>
-                <div class="input-group">
-                    <div><label for="startDate">Tanggal Mulai Semester</label><input type="date" id="startDate"
-                            required></div>
-                    <div><label for="weeksCount">Ulangi Selama (Minggu)</label><input type="number" id="weeksCount"
-                            value="14" min="1" max="20" required></div>
+        <!-- Main Grid: Section 1 (Left) + Section 2 (Right) -->
+        <div class="main-grid">
+            <!-- Section 1: Input Area (Left) -->
+            <section class="section-input">
+                <div class="input-card">
+                    <div class="card-header">
+                        <h2 class="section-title">1. Paste Jadwal dari BIMA</h2>
+                        <p class="section-desc">Copy seluruh jadwal kuliah dari portal BIMA dan paste di sini. <a
+                                href="instructions.html" class="inline-link"
+                                style="color: var(--color-black); font-weight: 600; text-decoration: underline;">Lihat
+                                Panduan</a></p>
+                    </div>
+                    <textarea id="scheduleInput" class="schedule-textarea"
+                        placeholder="Paste jadwal mentah dari BIMA di sini...&#10;&#10;Contoh:&#10;Algoritma dan Struktur Data&#10;3&#10;Senin, 08:00-10:00&#10;..."></textarea>
+                    <button id="btnParseSchedule" class="btn btn-primary btn-parse">
+                        <span class="btn-text">Parse Jadwal</span>
+                    </button>
                 </div>
-                <button id="btnSyncToCalendar" class="button">Sinkronkan ke Google Calendar</button>
-                <button id="btnDownloadIcs" class="button"
-                    style="background-color: transparent; border: 2px solid var(--c-primary); color: var(--c-primary); margin-top: 12px;">Download
-                    File Jadwal (.ics)</button>
             </section>
-            <div id="loadingIndicator" class="hidden">
-                <div class="spinner"></div>
+
+            <!-- Section 2: Preview Area (Right) -->
+            <section class="section-preview" id="sectionPreview">
+                <div class="preview-card">
+                    <div class="card-header">
+                        <h2 class="section-title">2. Preview Jadwal</h2>
+                        <p class="section-desc" id="previewDesc">Jadwal akan muncul setelah parsing</p>
+                    </div>
+                    <div id="previewContainer" class="preview-content">
+                        <div class="calendar-wrapper">
+                            <div class="calendar-header">
+                                <div class="header-time-col"></div>
+                                <div class="header-day-col">Senin</div>
+                                <div class="header-day-col">Selasa</div>
+                                <div class="header-day-col">Rabu</div>
+                                <div class="header-day-col">Kamis</div>
+                                <div class="header-day-col">Jumat</div>
+                                <div class="header-day-col">Sabtu</div>
+                            </div>
+                            <div class="calendar-body">
+                                <div class="time-column" id="timeColumn"></div>
+                                <div class="day-column" id="dayMonday"></div>
+                                <div class="day-column" id="dayTuesday"></div>
+                                <div class="day-column" id="dayWednesday"></div>
+                                <div class="day-column" id="dayThursday"></div>
+                                <div class="day-column" id="dayFriday"></div>
+                                <div class="day-column" id="daySaturday"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Section 3: Configuration & Actions (Bottom) -->
+        <section class="section-actions" id="sectionActions">
+            <div class="actions-card">
+                <div class="card-header">
+                    <h2 class="section-title">3. Konfigurasi & Sinkronisasi</h2>
+                    <p class="section-desc">Atur tanggal mulai semester dan pilih metode sync</p>
+                </div>
+
+                <div class="config-grid">
+                    <div class="config-item">
+                        <label for="startDate" class="config-label">Tanggal Mulai Semester</label>
+                        <input type="date" id="startDate" class="config-input" required>
+                    </div>
+                    <div class="config-item">
+                        <label for="weeksCount" class="config-label">Ulangi Selama (Minggu)</label>
+                        <input type="number" id="weeksCount" class="config-input" value="14" min="1" max="20" required>
+                    </div>
+                </div>
+
+                <div class="auth-status-container" id="authStatusContainer">
+                    <div class="auth-status" id="authStatus">
+                        <span class="auth-badge" id="authBadge">Belum Terhubung</span>
+                        <button id="btnConnectGoogle" class="btn btn-link">Hubungkan Google Calendar</button>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <div class="action-item">
+                        <button id="btnDownloadIcs" class="btn btn-outline btn-large" style="width: 100%;">
+                            <svg class="btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            <span class="btn-text">Download File .ics</span>
+                        </button>
+                        <a href="#" id="btnShowTutorial" class="link-tutorial">Cara Import File .ics</a>
+                    </div>
+                    <div class="action-item">
+                        <button id="btnSyncToCalendar" class="btn btn-primary btn-large" style="width: 100%;">
+                            <svg class="btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                            <span class="btn-text">Sync ke Google Calendar</span>
+                        </button>
+                    </div>
+                </div>
             </div>
-            <div id="resultContainer" class="hidden"></div>
-            <div id="statusMessage" class="hidden"></div>
-        </main>
+        </section>
+
+        <!-- Loading Overlay -->
+        <div id="loadingIndicator" class="loading-overlay hidden">
+            <div class="spinner"></div>
+            <p class="loading-text">Memproses...</p>
+        </div>
+
+        <!-- Status Message -->
+        <div id="statusMessage" class="hidden"></div>
+
+        <!-- Footer -->
+        <footer class="sync-footer">
+            <p>&copy; 2026 BimCalendar. Dibuat untuk memudahkan kita semua.</p>
+            <div class="footer-links">
+                <a href="index.html" class="footer-link">Beranda</a>
+                <a href="instructions.html" class="footer-link">Panduan</a>
+                <a href="privacy.html" class="footer-link">Privacy Policy</a>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ICS Tutorial Modal -->
+    <div id="tutorialModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Cara Import File .ics</h3>
+                <button class="btn-close-modal" aria-label="Close">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="tutorial-section">
+                    <h4 class="tutorial-platform">📱 Google Calendar (Mobile)</h4>
+                    <ol class="tutorial-steps">
+                        <li>Buka file .ics yang sudah didownload</li>
+                        <li>Pilih "Google Calendar" dari daftar aplikasi</li>
+                        <li>Konfirmasi untuk menambahkan event</li>
+                    </ol>
+                </div>
+                <div class="tutorial-section">
+                    <h4 class="tutorial-platform">💻 Google Calendar (Desktop)</h4>
+                    <ol class="tutorial-steps">
+                        <li>Buka halaman <a href="https://calendar.google.com/calendar/u/0/r/settings/export"
+                                target="_blank" rel="noopener">Import & Export Google Calendar</a></li>
+                        <li>Pada bagian <strong>Import</strong>, klik "Select file from your computer"</li>
+                        <li>Pilih file .ics yang sudah didownload</li>
+                        <li>Pilih calendar tujuan dan klik tombol "Import"</li>
+                    </ol>
+                </div>
+                <div class="tutorial-section">
+                    <h4 class="tutorial-platform">🍎 Apple Calendar</h4>
+                    <ol class="tutorial-steps">
+                        <li>Double-click file .ics di Finder</li>
+                        <li>Calendar akan terbuka otomatis</li>
+                        <li>Pilih calendar tujuan dan klik "OK"</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary btn-close-modal">Mengerti</button>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>

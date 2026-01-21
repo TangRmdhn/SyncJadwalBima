@@ -8,8 +8,10 @@ function parseJadwal(rawText) {
 
   const courses = [];
   
-  for (let i = 0; i < cleanLines.length; i += 4) {
-    if (i + 3 >= cleanLines.length) break;
+  let i = 0;
+  while (i < cleanLines.length) {
+    // Kita butuh minimal 3 baris (Info, Jadwal, Dosen/Angka)
+    if (i + 2 >= cleanLines.length) break;
 
     const line1 = cleanLines[i];
     const line2 = cleanLines[i + 1];
@@ -19,6 +21,20 @@ function parseJadwal(rawText) {
       const courseInfo = parseLine1(line1);
       const scheduleInfo = parseLine2(line2);
       
+      let dosenStr = '-';
+      let increment = 4; // Default untuk mata kuliah biasa (ada dosen + angka kehadiran)
+
+      // Cek apakah line3 angka saja? (Menandakan itu angka kehadiran -> berarti Praktikum tanpa dosen)
+      if (/^\d+$/.test(line3)) {
+        // Kondisi Baru: Praktikum
+        dosenStr = '-';
+        increment = 3;
+      } else {
+        // Kondisi Lama: Mata Kuliah Biasa (line3 adalah Nama Dosen)
+        dosenStr = line3;
+        increment = 4;
+      }
+
       if (courseInfo && scheduleInfo) {
         courses.push({
           kode_matkul: courseInfo.kode,
@@ -29,12 +45,17 @@ function parseJadwal(rawText) {
           jam_mulai: scheduleInfo.jamMulai,
           jam_selesai: scheduleInfo.jamSelesai,
           lokasi: scheduleInfo.lokasi,
-          dosen: line3, // Dosen diambil dari baris ke-3
-          // jumlah_pertemuan tidak ada lagi
+          dosen: dosenStr,
         });
       }
+
+      // Maju sesuai tipe blok yang terdeteksi
+      i += increment;
+
     } catch (error) {
       console.error(`Error parsing block starting with "${line1}":`, error.message);
+      // Jika error, maju 1 baris untuk mencoba recover/cari header berikutnya
+      i++;
     }
   }
   return courses;
