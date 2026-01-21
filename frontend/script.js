@@ -50,7 +50,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     setDefaultDate(startDateInput);
     initializeCalendar(); // Initialize calendar grid
-    toggleSection3(false); // Initially disable section 3
+    toggleSection3(true); // Initially disable section 3
 });
 
 function toggleSection3(enable) {
