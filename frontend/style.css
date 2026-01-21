@@ -748,12 +748,70 @@ body {
         grid-template-columns: 1fr;
     }
 
-    .calendar-body {
+    /* Fix Calendar Scrolling */
+    .calendar-wrapper {
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        /* Smooth scrolling on iOS */
+    }
+
+    .calendar-header,
+    .calendar-body {
+        min-width: 600px;
+        /* Force width to trigger horizontal scroll */
+    }
+
+    .calendar-body {
+        /* overflow-x is handled by wrapper now, but we need y for vertical */
+        overflow-x: hidden;
     }
 
     .header-day-col,
     .day-column {
-        min-width: 120px;
+        min-width: 80px;
+        /* Reduce min-width slightly for mobile fit */
+    }
+}
+
+@media (max-width: 480px) {
+    .sync-container {
+        padding: var(--spacing-md) var(--spacing-sm);
+    }
+
+    .logo-title {
+        font-size: var(--font-size-xl);
+    }
+
+    .section-title {
+        font-size: var(--font-size-lg);
+    }
+
+    .btn-large {
+        width: 100%;
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: var(--font-size-sm);
+    }
+
+    .schedule-textarea {
+        min-height: 200px;
+        /* Smaller height on mobile */
+    }
+
+    .preview-content,
+    .preview-empty {
+        min-height: 200px;
+    }
+
+    /* Stack header items more tightly */
+    .sync-header {
+        gap: var(--spacing-sm);
+        padding-bottom: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .back-link {
+        width: 100%;
+        text-align: center;
+        display: block;
     }
 }
