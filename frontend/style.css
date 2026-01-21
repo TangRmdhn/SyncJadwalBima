@@ -723,25 +723,59 @@ body {
 
 
 /* === RESPONSIVE === */
+/* === RESPONSIVE === */
 @media (max-width: 1024px) {
+    /* Keep 2 columns for tablet if space permits, or switch sooner if needed. 
+       For now, let's stick to the request to stack on mobile (768px), 
+       but we might want to adjust tablet spacing. */
+}
+
+@media (max-width: 768px) {
+
+    /* Layout Grid - Stack vertically */
     .main-grid {
         grid-template-columns: 1fr;
+        display: flex;
+        /* Enforce vertical stacking order */
+        flex-direction: column;
+    }
+
+    /* Stack Section order: Input (1), Preview (2) */
+    .section-input {
+        order: 1;
+    }
+
+    .section-preview {
+        order: 2;
     }
 
     .action-buttons {
         grid-template-columns: 1fr;
     }
-}
 
-@media (max-width: 768px) {
     .sync-container {
         padding: var(--spacing-md);
     }
 
+    /* Header */
     .sync-header {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: center;
+        /* Center align for better look */
+        text-align: center;
         gap: var(--spacing-md);
+    }
+
+    .logo-section {
+        width: 100%;
+        text-align: center;
+    }
+
+    .back-link {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+        display: flex;
     }
 
     .config-grid {
@@ -753,23 +787,67 @@ body {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
         /* Smooth scrolling on iOS */
+        width: 100%;
     }
 
-    .calendar-header,
-    .calendar-body {
-        min-width: 600px;
-        /* Force width to trigger horizontal scroll */
+    /* Ensure content is wide enough to scroll */
+    .calendar-header {
+        min-width: 700px;
+        /* Ensure days aren't squashed */
     }
 
     .calendar-body {
-        /* overflow-x is handled by wrapper now, but we need y for vertical */
+        min-width: 700px;
+        /* Match header width */
         overflow-x: hidden;
+        /* Prevent double scrollbars, wrapper handles x-scroll */
+    }
+
+    /* Touch Targets */
+    .btn,
+    .config-input,
+    .schedule-textarea,
+    .btn-large,
+    .header-day-col {
+        min-height: 48px;
+        /* Comfortable touch target */
+    }
+
+    .btn {
+        justify-content: center;
+    }
+
+    .header-time-col,
+    .time-column {
+        width: 50px;
+        /* Slightly smaller time col to save space */
     }
 
     .header-day-col,
     .day-column {
-        min-width: 80px;
-        /* Reduce min-width slightly for mobile fit */
+        min-width: 90px;
+    }
+
+    /* Typography Adjustments */
+    .hero-title {
+        font-size: 2.5rem;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+    }
+
+    /* Input Area */
+    .schedule-textarea {
+        min-height: 200px;
+        /* Smaller initial height */
+    }
+
+    /* Modal */
+    .modal-content {
+        width: 95%;
+        margin: var(--spacing-sm);
+        max-height: 90vh;
     }
 }
 
