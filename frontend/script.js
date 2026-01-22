@@ -48,9 +48,35 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Check for saved data in localStorage
+    const savedRawText = localStorage.getItem('syncjadwal_raw_text');
+    const savedCourses = localStorage.getItem('syncjadwal_courses');
+
+    if (savedRawText) {
+        scheduleInput.value = savedRawText;
+    }
+
+    if (savedCourses) {
+        try {
+            parsedCourses = JSON.parse(savedCourses);
+            if (Array.isArray(parsedCourses) && parsedCourses.length > 0) {
+                displayParsedCourses(parsedCourses);
+                sectionPreview.classList.remove('hidden');
+                toggleSection3(true);
+                previewDesc.textContent = `${parsedCourses.length} mata kuliah berhasil dipulihkan`;
+            } else {
+                toggleSection3(false);
+            }
+        } catch (e) {
+            console.error('Error loading saved courses:', e);
+            toggleSection3(false);
+        }
+    } else {
+        toggleSection3(false);
+    }
+
     setDefaultDate(startDateInput);
     initializeCalendar(); // Initialize calendar grid
-    toggleSection3(true); // Initially disable section 3
 });
 
 function toggleSection3(enable) {
@@ -127,6 +153,10 @@ btnParseSchedule.onclick = async () => {
 
         parsedCourses = data.data;
         displayParsedCourses(parsedCourses);
+        
+        // Save to localStorage
+        localStorage.setItem('syncjadwal_courses', JSON.stringify(parsedCourses));
+        localStorage.setItem('syncjadwal_raw_text', rawText);
         
         // Show preview and enable actions sections
         sectionPreview.classList.remove('hidden');
