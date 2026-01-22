@@ -48,6 +48,10 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Initialize UI
+    setDefaultDate(startDateInput);
+    initializeCalendar(); // Initialize calendar grid first so events can be appended
+
     // Check for saved data in localStorage
     const savedRawText = localStorage.getItem('syncjadwal_raw_text');
     const savedCourses = localStorage.getItem('syncjadwal_courses');
@@ -74,9 +78,6 @@ window.addEventListener('DOMContentLoaded', () => {
     } else {
         toggleSection3(false);
     }
-
-    setDefaultDate(startDateInput);
-    initializeCalendar(); // Initialize calendar grid
 });
 
 function toggleSection3(enable) {
